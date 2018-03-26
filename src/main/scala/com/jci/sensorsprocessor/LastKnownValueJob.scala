@@ -20,18 +20,20 @@ object LastKnownValueJob {
   val logger = LoggerFactory.getLogger("com.jci.sensors")
 
   case class CliConf(kafkaBroker: String = null, sensorsFile: String = null, samplesTopic: String = null, lastKnownValueTopic: String = null,
-                     period: Duration = 15.minutes)
+                     period: Duration = 15.minutes, local: Boolean = false)
   def main(args: Array[String]): Unit = {
 
     val parser = new scopt.OptionParser[CliConf]("last-known-value") {
       opt[String]("kafkaBrokers").text("Kafka brokers host:port<,host:port>.").required.action((x, c) => c.copy(kafkaBroker = x))
       opt[String]("samplesTopic").text("Kafka topic where samples arrive").required.action((x, c) => c.copy(samplesTopic = x))
       opt[String]("lastKnownValueTopic").text("Kafka topic where last known values are published to").required.action((x, c) => c.copy(lastKnownValueTopic = x))
+      opt[Unit]('l', "local").text("set the spark master to local[*]").required.action((x, c) => c.copy(local = true))
       opt[scala.concurrent.duration.Duration]('p', "period").action((x, c) => c.copy(period = x))
     }
     val cliConf = parser.parse(args, CliConf()).getOrElse(sys.exit(-1))
 
-    val conf = new SparkConf().setMaster("local[*]").setAppName("sensor-data-aggregation")
+    val conf = new SparkConf().setAppName("sensor-data-aggregation")
+    if (cliConf.local) conf.setMaster("local[*]")
     val ssc = new StreamingContext(conf, SparkDuration.apply(cliConf.period.toMillis))
 
     val kafkaParams = Map[String, AnyRef](

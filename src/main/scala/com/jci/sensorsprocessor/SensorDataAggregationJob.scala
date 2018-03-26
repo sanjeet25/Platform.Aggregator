@@ -20,7 +20,8 @@ object SensorDataAggregationJob {
   val logger = LogManager.getLogger("com.jci.sensors")
 
   case class CliConf(kafkaBroker: String = null, sensorsFile: String = null, samplesTopic: String = null, aggregatesTopic: String = null,
-                     timeWindows: Seq[Duration] = Seq(Minutes(60), Minutes(60 * 24), Minutes(60 * 24 * 7)), period: Duration = Minutes(15))
+                     timeWindows: Seq[Duration] = Seq(Minutes(60), Minutes(60 * 24), Minutes(60 * 24 * 7)), period: Duration = Minutes(15),
+                     local: Boolean = false)
 
   def main(args: Array[String]): Unit = {
     implicit val durationRead = scopt.Read.doubleRead.map(d => Seconds((d * 60).toLong))
@@ -32,10 +33,12 @@ object SensorDataAggregationJob {
       opt[Seq[Duration]]("timeWindows").text("Comma separated list of durations (in minutes) different time windows").action(
         (x, c) => c.copy(timeWindows = x.sortBy(_.milliseconds)))
       opt[Duration]('p', "period").action((x, c) => c.copy(period = x))
+      opt[Unit]('l', "local").text("set the spark master to local[*]").required.action((x, c) => c.copy(local = true))
     }
     val cliConf = parser.parse(args, CliConf()).getOrElse(sys.exit(-1))
 
-    val conf = new SparkConf().setMaster("local[*]").setAppName("sensor-data-aggregation")
+    val conf = new SparkConf().setAppName("sensor-data-aggregation")
+    if (cliConf.local) conf.setMaster("local[*]")
     val ssc = new StreamingContext(conf, cliConf.period)
 
 
