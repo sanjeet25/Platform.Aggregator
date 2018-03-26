@@ -33,7 +33,7 @@ object SensorDataAggregationJob {
       opt[Seq[Duration]]("timeWindows").text("Comma separated list of durations (in minutes) different time windows").action(
         (x, c) => c.copy(timeWindows = x.sortBy(_.milliseconds)))
       opt[Duration]('p', "period").action((x, c) => c.copy(period = x))
-      opt[Unit]('l', "local").text("set the spark master to local[*]").required.action((x, c) => c.copy(local = true))
+      opt[Unit]('l', "local").text("set the spark master to local[*]").action((x, c) => c.copy(local = true))
     }
     val cliConf = parser.parse(args, CliConf()).getOrElse(sys.exit(-1))
 

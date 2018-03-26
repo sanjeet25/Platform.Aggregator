@@ -27,7 +27,7 @@ object LastKnownValueJob {
       opt[String]("kafkaBrokers").text("Kafka brokers host:port<,host:port>.").required.action((x, c) => c.copy(kafkaBroker = x))
       opt[String]("samplesTopic").text("Kafka topic where samples arrive").required.action((x, c) => c.copy(samplesTopic = x))
       opt[String]("lastKnownValueTopic").text("Kafka topic where last known values are published to").required.action((x, c) => c.copy(lastKnownValueTopic = x))
-      opt[Unit]('l', "local").text("set the spark master to local[*]").required.action((x, c) => c.copy(local = true))
+      opt[Unit]('l', "local").text("set the spark master to local[*]").action((x, c) => c.copy(local = true))
       opt[scala.concurrent.duration.Duration]('p', "period").action((x, c) => c.copy(period = x))
     }
     val cliConf = parser.parse(args, CliConf()).getOrElse(sys.exit(-1))
